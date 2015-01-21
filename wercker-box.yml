@@ -1,5 +1,5 @@
-name: ruby-docker
-version: 0.0.2
+name: rvm-docker
+version: 0.0.1
 inherits: wercker/rvm@2.4.0
 type: main
 platform: ubuntu@12.04
