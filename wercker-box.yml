@@ -1,20 +1,31 @@
 name: rvm-docker
-version: 0.0.3
+version: 0.0.5
 inherits: wercker/rvm@2.4.0
 type: main
 platform: ubuntu@12.04
 description: Wercker box for rvm and docker
 keywords:
   - rvm
-  - docker
+  - Docker
+  - Ubuntu 14
 scripts: |
-  sudo apt-get update
-  sudo apt-get install -y linux-image-generic-lts-raring linux-headers-generic-lts-raring
-  sudo apt-get install -y --install-recommends linux-generic-lts-raring xserver-xorg-lts-raring libgl1-mesa-glx-lts-raring
-  sudo apt-get install -y apt-transport-https
-  sudo apt-get install -y python-software-properties
+  #upgrade to 14.04
+  sudo apt-get update -y
+  sudo apt-get install -y update-manager-core
+  sudo do-release-upgrade -f DistUpgradeViewNonInteractive -m server -d
+  sudo apt-get install -y aptitude
+  sudo aptitude update
+  sudo aptitude safe-upgrade
+  
+  # common packages
+  sudo aptitude install -y autoconf bash-completion bind9-host bison build-essential checkinstall curl daemontools dnsutils ed git htop imagemagick iputils-tracepath jpegoptim libcurl4-openssl-dev libevent-dev libglib2.0-dev libjpeg-dev libjpeg62 libmagickcore-dev libmagickwand-dev libmcrypt-dev libmysqlclient-dev libpng12-0 libpng12-dev libpq-dev libqtwebkit-dev libreadline-dev libsqlite3-dev libssl-dev libssl0.9.8 libv8-dev libxml2-dev libxslt-dev lsof mercurial netcat-openbsd ngrep ruby socat software-properties-common sqlite3 telnet tmux ufw unattended-upgrades vim-nox wget zlib1g-dev
+  
+  #Install Docker
+  sudo apt-get update -qq
+  sudo apt-get install apt-transport-https -y -qq
+  sudo apt-get install python-software-properties -y -qq
+  sudo apt-add-repository ppa:brightbox/ruby-ng -y
   sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9
   sudo sh -c "echo deb https://get.docker.com/ubuntu docker main > /etc/apt/sources.list.d/docker.list"
-  sudo apt-get update
-  sudo apt-get install -y lxc-docker
-
+  sudo apt-get update -qq
+  sudo apt-get install lxc-docker -y -qq
