@@ -1,31 +1,119 @@
 name: rvm-docker
-version: 0.0.5
-inherits: wercker/rvm@2.4.0
+version: 0.0.6
+inherits: wercker-labs/docker
 type: main
 platform: ubuntu@12.04
 description: Wercker box for rvm and docker
+packages:
+    - ruby@1.9.3-p547
+    - ruby@1.9.3-p550
+    - ruby@1.9.3-p551
+    - ruby@2.0.0-p576
+    - ruby@2.0.0-p594
+    - ruby@2.0.0-p598
+    - ruby@2.1.3
+    - ruby@2.1.4
+    - ruby@2.1.5
+    - ruby@2.2.0
 keywords:
-  - rvm
-  - Docker
-  - Ubuntu 14
-scripts: |
-  #upgrade to 14.04
-  sudo apt-get update -y
-  sudo apt-get install -y update-manager-core
-  sudo do-release-upgrade -f DistUpgradeViewNonInteractive -m server -d
-  sudo apt-get install -y aptitude
-  sudo aptitude update
-  sudo aptitude safe-upgrade
-  
-  # common packages
-  sudo aptitude install -y autoconf bash-completion bind9-host bison build-essential checkinstall curl daemontools dnsutils ed git htop imagemagick iputils-tracepath jpegoptim libcurl4-openssl-dev libevent-dev libglib2.0-dev libjpeg-dev libjpeg62 libmagickcore-dev libmagickwand-dev libmcrypt-dev libmysqlclient-dev libpng12-0 libpng12-dev libpq-dev libqtwebkit-dev libreadline-dev libsqlite3-dev libssl-dev libssl0.9.8 libv8-dev libxml2-dev libxslt-dev lsof mercurial netcat-openbsd ngrep ruby socat software-properties-common sqlite3 telnet tmux ufw unattended-upgrades vim-nox wget zlib1g-dev
-  
-  #Install Docker
-  sudo apt-get update -qq
-  sudo apt-get install apt-transport-https -y -qq
-  sudo apt-get install python-software-properties -y -qq
-  sudo apt-add-repository ppa:brightbox/ruby-ng -y
-  sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9
-  sudo sh -c "echo deb https://get.docker.com/ubuntu docker main > /etc/apt/sources.list.d/docker.list"
-  sudo apt-get update -qq
-  sudo apt-get install lxc-docker -y -qq
+    - ruby
+    - rvm
+    - Docker
+script: |
+    sudo apt-get update -y
+    sudo apt-get install git zlib1g-dev libreadline-dev libqtwebkit-dev curl -y
+    sudo apt-get remove ruby1.9.1
+    gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3
+    curl -sSL https://get.rvm.io | bash -s stable
+    echo "bundler -v~>1.5.1" > $HOME/.rvm/gemsets/global.gems
+    source $HOME/.rvm/scripts/rvm
+    rvm install 1.9.3-p547
+    rvm install 1.9.3-p550
+    rvm install 1.9.3-p551
+    rvm install 2.0.0-p576
+    rvm install 2.0.0-p594
+    rvm install 2.0.0-p598
+    rvm install 2.1.3
+    rvm install 2.1.4
+    rvm install 2.1.5
+    rvm install 2.2.0
+    rvm --default use 2.2.0
+    echo "gem: --no-rdoc --no-ri" >> $HOME/.gemrc
+    echo "RAILS_ENV=test" | sudo tee -a /etc/environment
+    echo "RACK_ENV=test" | sudo tee -a /etc/environment
+box-detect:
+    priority: 200
+    version:
+    detect:
+        - files:
+            - Gemfile
+
+default-build:
+    ruby-on-rails:
+        priority: 100
+        detect:
+            - files:
+                - config
+        text-to-append: |-
+            # Build definition
+            # See the Rails section on the wercker devcenter:
+            # http://devcenter.wercker.com/articles/languages/ruby/settingup-rails4.html
+            # You will want to define your database as follows:
+            # services:
+            #   - wercker/postgresql
+            # See more about services on our devcenter:
+            # http://devcenter.wercker.com/articles/services/
+            build:
+                steps:
+                    # Uncomment this to force RVM to use a specific Ruby version
+                    # - rvm-use:
+                    #       version: 2.2.0
+
+                    # A step that executes `bundle install` command
+                    - bundle-install
+
+                    # A step that prepares the database.yml using the database in services
+                    # - rails-database-yml
+
+                    # A custom script step, name value is used in the UI
+                    # and the code value contains the command that get executed
+                    - script:
+                        name: echo ruby information
+                        code: |
+                            echo "ruby version $(ruby --version) running"
+                            echo "from location $(which ruby)"
+                            echo -p "gem list: $(gem list)"
+                    # Add more steps here:
+                    # - script:
+                    #        name: rspec
+                    #        code: bundle exec rspec
+    ruby:
+        priority : 50
+        detect:
+            - default: true
+        text-to-append: |-
+            # Build definition
+            build:
+                # The steps that will be executed on build
+                # See the Ruby section on the wercker devcenter:
+                # http://devcenter.wercker.com/articles/languages/ruby.html
+                steps:
+                    # Uncomment this to force RVM to use a specific Ruby version
+                    # - rvm-use:
+                    #       version: 2.2.0
+
+                    # A step that executes `bundle install` command
+                    - bundle-install
+
+                    # A custom script step, name value is used in the UI
+                    # and the code value contains the command that get executed
+                    - script:
+                        name: echo ruby information
+                        code: |
+                            echo "ruby version $(ruby --version) running"
+                            echo "from location $(which ruby)"
+                            echo -p "gem list: $(gem list)"
+                    # Add more steps here:
+                    # - script:
+                    #    name: rspec
+                    #    code: bundle exec rspec
